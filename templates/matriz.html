@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}Matriz — PrecioValida{% endblock %}
+{% block content %}
+
+{% if not solicitud %}
+  <div class="card text-center">Sin solicitudes activas.</div>
+{% else %}
+  <div class="page-title">Matriz</div>
+  <div class="page-sub">{{ solicitud.nombre }} · {{ productos|length }} productos × {{ tiendas|length }} tiendas</div>
+
+  <div class="tabs">
+    <a href="{{ url_for('dashboard') }}" class="tab" style="text-decoration:none;">Resumen</a>
+    <a href="{{ url_for('dashboard_matriz') }}" class="tab active" style="text-decoration:none;">Matriz producto × tienda</a>
+  </div>
+
+  <div class="card" style="padding: 12px 16px; margin-bottom: 16px; font-size: 12px;">
+    <span class="mono" style="margin-right: 16px;">
+      <span style="display:inline-block;width:12px;height:12px;background:var(--ok);border:1px solid var(--line);vertical-align:middle;"></span>
+      Etiquetado
+    </span>
+    <span class="mono" style="margin-right: 16px;">
+      <span style="display:inline-block;width:12px;height:12px;background:var(--warn-bg);border:1px solid var(--line);vertical-align:middle;"></span>
+      Pendiente
+    </span>
+    <span class="mono">
+      <span style="display:inline-block;width:12px;height:12px;background:#f0ece3;border:1px solid var(--line);vertical-align:middle;"></span>
+      No aplica
+    </span>
+  </div>
+
+  <div class="matriz-wrap">
+    <table class="matriz">
+      <thead>
+        <tr>
+          <th class="codigo-col">Código</th>
+          <th class="producto-col">Producto</th>
+          <th>Q</th>
+          {% for t in tiendas %}<th>{{ t.nombre }}</th>{% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in productos %}
+        <tr>
+          <td class="codigo-col">{{ p.codigo }}</td>
+          <td class="producto-col" title="{{ p.nombre }}">{{ p.nombre[:40] }}{% if p.nombre|length > 40 %}…{% endif %}</td>
+          <td><strong>{{ '%.0f'|format(p.precio_nuevo) }}</strong></td>
+          {% for t in tiendas %}
+            {% set a = mapa.get((p.id, t.id)) %}
+            {% if a %}
+              {% if a.etiquetado %}
+                <td class="cell-ok" title="{{ t.nombre }}: ✓ Etiquetado">✓</td>
+              {% else %}
+                <td class="cell-pending" title="{{ t.nombre }}: pendiente">·</td>
+              {% endif %}
+            {% else %}
+              <td class="cell-na"></td>
+            {% endif %}
+          {% endfor %}
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% endif %}
+
+{% endblock %}

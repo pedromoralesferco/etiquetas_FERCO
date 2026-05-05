@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — PrecioValida{% endblock %}
+{% block content %}
+
+{% if not solicitud %}
+  <div class="card text-center">
+    <div class="page-title" style="font-size: 28px;">Sin solicitudes activas</div>
+    <div class="muted">Corre el importador para cargar productos.</div>
+  </div>
+{% else %}
+  <div class="page-title">Dashboard</div>
+  <div class="page-sub">{{ solicitud.nombre }} · Creada {{ solicitud.fecha_creacion.strftime('%d %b %Y') }}</div>
+
+  <div class="tabs">
+    <a href="{{ url_for('dashboard') }}" class="tab active" style="text-decoration:none;">Resumen</a>
+    <a href="{{ url_for('dashboard_matriz') }}" class="tab" style="text-decoration:none;">Matriz producto × tienda</a>
+  </div>
+
+  <div class="kpi-grid">
+    <div class="kpi kpi-primary">
+      <div class="kpi-label">Avance global</div>
+      <div class="kpi-value mono">{{ pct_global|round(1) }}<span style="font-size:28px;">%</span></div>
+      <div class="kpi-sub">{{ global_hechos }} de {{ global_total }} etiquetas</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Tiendas activas</div>
+      <div class="kpi-value">{{ stats|length }}</div>
+      <div class="kpi-sub">sucursales con productos asignados</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Finalizadas</div>
+      <div class="kpi-value">{{ stats|selectattr('pct', 'ge', 100)|list|length }}</div>
+      <div class="kpi-sub">tiendas al 100%</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Discrepancias</div>
+      <div class="kpi-value" style="color: var(--bad);">{{ discrepancias|length }}</div>
+      <div class="kpi-sub">reportes pendientes de revisar</div>
+    </div>
+  </div>
+
+  <div class="card-title">Avance por tienda</div>
+  <div class="tabla-tiendas">
+    <table>
+      <thead>
+        <tr>
+          <th>Tienda</th>
+          <th class="num">Etiquetados</th>
+          <th class="num">Pendientes</th>
+          <th class="num">Total</th>
+          <th>% avance</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in stats|sort(attribute='pct', reverse=true) %}
+        <tr>
+          <td><strong>{{ s.tienda }}</strong></td>
+          <td class="num">{{ s.hechos }}</td>
+          <td class="num">{{ s.pendiente }}</td>
+          <td class="num">{{ s.total }}</td>
+          <td>
+            <span class="bar-mini">
+              <span class="bar-mini-fill {% if s.pct < 40 %}low{% elif s.pct < 80 %}mid{% endif %}" style="width: {{ s.pct }}%"></span>
+            </span>
+            <span class="mono">{{ s.pct|round(0, 'floor')|int }}%</span>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if discrepancias %}
+  <div style="margin-top: 32px;">
+    <div class="card-title">Discrepancias recientes</div>
+    <div class="card" style="padding: 0;">
+      {% for d in discrepancias %}
+      <div class="disc-item">
+        {% if d.foto_path %}
+          <img class="disc-foto" src="{{ url_for('uploaded_file', fname=d.foto_path) }}" alt="">
+        {% else %}
+          <div class="disc-foto"></div>
+        {% endif %}
+        <div>
+          <div class="disc-codigo">{{ d.producto.codigo }} · {{ d.tienda.nombre }}</div>
+          <div class="muted" style="font-size: 12px;">{{ d.producto.nombre[:60] }}…</div>
+          {% if d.comentario %}<div style="font-size: 12px; margin-top: 4px;">📝 {{ d.comentario }}</div>{% endif %}
+        </div>
+        <div class="disc-precio">
+          <div><span class="esp">Esp:</span> Q {{ '%.2f'|format(d.precio_esperado) }}</div>
+          <div><span class="ocr">OCR:</span> {{ 'Q %.2f'|format(d.precio_ocr) if d.precio_ocr else '—' }}</div>
+        </div>
+        <div class="mono muted" style="font-size: 11px;">{{ d.timestamp.strftime('%d/%m %H:%M') }}</div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+{% endif %}
+
+{% endblock %}

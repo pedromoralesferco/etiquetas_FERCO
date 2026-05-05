@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}Productos — {{ tienda.nombre if tienda else '' }}{% endblock %}
+{% block wrap_class %}wrap-narrow{% endblock %}
+{% block content %}
+
+{% if not solicitud %}
+  <div class="card text-center">
+    <div class="page-title" style="font-size: 28px;">Sin solicitudes activas</div>
+    <div class="muted">Contacta al administrador.</div>
+  </div>
+{% else %}
+  <div class="page-title">{{ solicitud.nombre }}</div>
+  <div class="page-sub">
+    {{ tienda.nombre }} · Cierre: <span class="mono">{{ solicitud.fecha_limite.strftime('%d %b %Y') if solicitud.fecha_limite else '—' }}</span>
+  </div>
+
+  <div class="progreso-header">
+    <div>
+      <div class="progreso-pct">{{ ((hechos/total*100) if total else 0)|round(0, 'floor')|int }}<span style="font-size:28px;">%</span></div>
+      <div class="progreso-label">Avance</div>
+    </div>
+    <div class="text-right">
+      <div class="mono" style="font-size: 28px; font-weight: 700;">{{ hechos }}/{{ total }}</div>
+      <div class="progreso-label">Etiquetados</div>
+    </div>
+    <div class="progreso-barra">
+      <div class="progreso-barra-fill" style="width: {{ (hechos/total*100) if total else 0 }}%"></div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" data-filter="pendientes">Pendientes ({{ total - hechos }})</div>
+    <div class="tab" data-filter="todos">Todos ({{ total }})</div>
+    <div class="tab" data-filter="hechos">Hechos ({{ hechos }})</div>
+  </div>
+
+  <div id="lista-productos">
+    {% for p in productos %}
+      <a href="{{ url_for('capturar', producto_id=p.id) }}" class="producto-item {{ 'hecho' if p.etiquetado }}" data-estado="{{ 'hecho' if p.etiquetado else 'pendiente' }}">
+        <div class="producto-codigo">{{ p.codigo }}</div>
+        <div class="producto-info">
+          <div class="producto-nombre">{{ p.nombre }}</div>
+          <div class="producto-precio">Q {{ '%.2f'|format(p.precio_nuevo) }}</div>
+        </div>
+        {% if p.etiquetado %}
+          <div class="producto-status ok">✓ {{ p.fecha_etiquetado or 'Listo' }}</div>
+        {% else %}
+          <div class="producto-status pendiente">Pendiente</div>
+        {% endif %}
+      </a>
+    {% else %}
+      <div class="card text-center muted">No tienes productos asignados en esta solicitud.</div>
+    {% endfor %}
+  </div>
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      const filter = tab.dataset.filter;
+      document.querySelectorAll('.producto-item').forEach(item => {
+        const est = item.dataset.estado;
+        if (filter === 'todos') item.style.display = '';
+        else if (filter === 'hechos' && est === 'hecho') item.style.display = '';
+        else if (filter === 'pendientes' && est === 'pendiente') item.style.display = '';
+        else item.style.display = 'none';
+      });
+    });
+  });
+</script>
+{% endblock %}

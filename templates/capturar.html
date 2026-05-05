@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}Validar {{ producto.codigo }}{% endblock %}
+{% block wrap_class %}wrap-narrow{% endblock %}
+{% block head %}
+<script src="https://unpkg.com/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<a href="{{ url_for('gerente') }}" class="btn btn-ghost" style="margin-bottom: 16px; padding: 8px 14px; font-size: 12px;">← Volver</a>
+
+<div class="captura-target">
+  <div class="label">Código esperado</div>
+  <div class="codigo">{{ producto.codigo }}</div>
+  <div class="label" style="margin-top: 14px;">Precio esperado</div>
+  <div class="precio">Q {{ '%.2f'|format(producto.precio_nuevo) }}</div>
+  <div class="label" style="font-size: 10px; margin-top: 6px; opacity: 0.6;">
+    {{ producto.nombre[:80] }}{% if producto.nombre|length > 80 %}…{% endif %}
+  </div>
+</div>
+
+<div class="camera-box" id="camera-box">
+  <video id="video" playsinline autoplay muted></video>
+  <div class="placeholder" id="camera-placeholder">Iniciando cámara…</div>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px;">
+  <button class="btn" id="btn-capturar" disabled>📷 Capturar</button>
+  <button class="btn btn-ghost" id="btn-reintentar" style="display:none;">Reintentar</button>
+</div>
+
+<div class="ocr-panel" id="ocr-panel" style="display: none;">
+  <div class="ocr-status" id="ocr-status">Analizando imagen…</div>
+  <div class="ocr-grid">
+    <div class="ocr-field" id="field-codigo">
+      <div class="ocr-field-label">Código leído</div>
+      <div class="ocr-field-value" id="val-codigo">—</div>
+      <div class="check" id="check-codigo"></div>
+    </div>
+    <div class="ocr-field" id="field-precio">
+      <div class="ocr-field-label">Precio leído</div>
+      <div class="ocr-field-value" id="val-precio">—</div>
+      <div class="check" id="check-precio"></div>
+    </div>
+  </div>
+  <div id="veredicto" style="margin-top: 14px; font-family: var(--font-display); font-size: 22px; font-weight: 700;"></div>
+
+  <div class="form-group" style="margin-top: 14px;">
+    <label class="form-label">Comentario (opcional)</label>
+    <input type="text" class="form-input" id="comentario" placeholder="p.ej. etiqueta dañada, hay que imprimir otra…">
+  </div>
+
+  <div class="acciones">
+    <button class="btn btn-bad" id="btn-discrepancia">✕ Discrepancia</button>
+    <button class="btn btn-ok" id="btn-confirmar">✓ Confirmar cambio</button>
+  </div>
+</div>
+
+<canvas id="canvas" style="display: none;"></canvas>
+
+<input type="hidden" id="producto-id" value="{{ producto.id }}">
+<input type="hidden" id="codigo-esperado" value="{{ producto.codigo }}">
+<input type="hidden" id="precio-esperado" value="{{ producto.precio_nuevo }}">
+
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/ocr.js') }}"></script>
+{% endblock %}

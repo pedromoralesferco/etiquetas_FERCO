@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>{% block title %}PrecioValida{% endblock %}</title>
+  <link rel="manifest" href="/manifest.webmanifest">
+  <meta name="theme-color" content="#0d0f12">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600;700&display=swap">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+  {% block head %}{% endblock %}
+</head>
+<body>
+  {% if current_user.is_authenticated %}
+  <header class="masthead">
+    <div class="masthead-inner">
+      <div class="brand">
+        <span class="brand-dot"></span>
+        PrecioValida
+      </div>
+      <div class="masthead-meta">
+        {% if current_user.rol == 'admin' %}
+          <strong>ADMIN</strong> · {{ current_user.nombre }}
+        {% else %}
+          <strong>{{ current_user.tienda.nombre if current_user.tienda else 'Sin tienda' }}</strong> · {{ current_user.nombre }}
+        {% endif %}
+        &nbsp;·&nbsp;
+        <a href="{{ url_for('logout') }}">Salir</a>
+      </div>
+    </div>
+  </header>
+  {% endif %}
+
+  <main class="wrap {% block wrap_class %}{% endblock %}">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, msg in messages %}
+        <div class="flash">{{ msg }}</div>
+      {% endfor %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </main>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}));
+    }
+  </script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

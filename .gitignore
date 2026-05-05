@@ -1,0 +1,12 @@
+venv/
+__pycache__/
+*.pyc
+*.db
+.env
+uploads_fotos/
+instance/
+.DS_Store
+python-portable/
+seed_data/*.xlsx
+seed_data/*.xls
+.claude/
